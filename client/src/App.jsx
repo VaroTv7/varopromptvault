@@ -135,15 +135,24 @@ const App = () => {
     };
 
     const handleRenameCategory = async (id, newName) => {
+        if (!newName || newName.trim() === "") return;
         try {
-            await fetch(`http://localhost:3000/api/categories/${id}`, {
+            const res = await fetch(`http://localhost:3000/api/categories/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newName })
             });
-            setEditingCategory(null);
-            fetchAllData();
-        } catch (err) { console.error(err); }
+            if (res.ok) {
+                setEditingCategory(null);
+                fetchAllData();
+            } else {
+                const data = await res.json();
+                alert(data.error || "Error al renombrar");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión");
+        }
     };
 
     const applyFilters = () => {
@@ -429,29 +438,42 @@ const App = () => {
                                         <div style={{ marginTop: '1.5rem', maxHeight: '300px', overflowY: 'auto' }}>
                                             {managingCategories.length === 0 && <div style={{ opacity: 0.5, textAlign: 'center', padding: '1rem' }}>Sincronizando categorías...</div>}
                                             {managingCategories.map(cat => (
-                                                <div key={cat.id || cat.name} className="nav-item" style={{ background: 'rgba(255,255,255,0.02)', margin: '0.5rem 0', cursor: 'default', display: 'flex', justifyContent: 'space-between' }}>
+                                                <div key={cat.id || cat.name} className="nav-item" style={{ background: 'rgba(255,255,255,0.02)', margin: '0.5rem 0', cursor: 'default', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem' }}>
                                                     {editingCategory?.id === cat.id ? (
-                                                        <input
-                                                            autoFocus
-                                                            className="search-input"
-                                                            style={{ flex: 1, margin: 0, padding: '2px 5px', background: 'var(--glass-bg)' }}
-                                                            value={editingCategory.name}
-                                                            onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                                                            onBlur={() => handleRenameCategory(cat.id, editingCategory.name)}
-                                                            onKeyDown={e => e.key === 'Enter' && handleRenameCategory(cat.id, editingCategory.name)}
-                                                        />
+                                                        <>
+                                                            <input
+                                                                autoFocus
+                                                                className="search-input"
+                                                                style={{ flex: 1, margin: 0, padding: '2px 5px', background: 'var(--glass-bg)', border: '1px solid var(--primary-color)' }}
+                                                                value={editingCategory.name}
+                                                                onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') handleRenameCategory(cat.id, editingCategory.name);
+                                                                    if (e.key === 'Escape') setEditingCategory(null);
+                                                                }}
+                                                            />
+                                                            <div style={{ display: 'flex', gap: '0.3rem', marginLeft: '0.5rem' }}>
+                                                                <button className="btn btn-primary" style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }} onClick={() => handleRenameCategory(cat.id, editingCategory.name)}>
+                                                                    OK
+                                                                </button>
+                                                                <button className="btn" style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }} onClick={() => setEditingCategory(null)}>
+                                                                    ✕
+                                                                </button>
+                                                            </div>
+                                                        </>
                                                     ) : (
-                                                        <span style={{ flex: 1 }}>{cat.name}</span>
+                                                        <>
+                                                            <span style={{ flex: 1 }}>{cat.name}</span>
+                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                <button className="btn" style={{ padding: '0.2rem 0.5rem', opacity: 0.8, fontSize: '0.7rem' }} onClick={() => setEditingCategory({ ...cat })}>
+                                                                    Renombrar
+                                                                </button>
+                                                                <button className="btn" style={{ padding: '2px', color: '#ef4444' }} onClick={() => handleDeleteCategory(cat.id)}>
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </>
                                                     )}
-
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button className="btn" style={{ padding: '0.2rem 0.5rem', opacity: 0.8, fontSize: '0.7rem' }} onClick={() => setEditingCategory(cat)}>
-                                                            Renombrar
-                                                        </button>
-                                                        <button className="btn" style={{ padding: '2px', color: '#ef4444' }} onClick={() => handleDeleteCategory(cat.id)}>
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
