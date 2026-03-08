@@ -68,38 +68,39 @@ if (count === 0) {
 }
 
 // Categories API
-app.get('/api/categories', async (request, reply) => {
-    return await db.all("SELECT * FROM categories");
+app.get('/api/categories', async (req, res) => {
+    return await db.all("SELECT * FROM categories ORDER BY name ASC");
 });
 
-app.post('/api/categories', async (request, reply) => {
-    const { name } = request.body;
+app.post('/api/categories', async (req, res) => {
+    const { name } = req.body;
     try {
         const result = await db.run("INSERT INTO categories (name) VALUES (?)", [name]);
         return { id: result.lastID, name };
     } catch (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-            reply.code(400).send({ error: 'Categoría ya existe' });
-        } else {
-            reply.code(500).send({ error: 'Error al crear categoría' });
-        }
+        res.code(400).send({ error: "Ya existe o es inválida" });
     }
 });
 
-app.put('/api/categories/:id', async (request, reply) => {
-    const { name } = request.body;
-    const result = await db.run("UPDATE categories SET name = ? WHERE id = ?", [name, request.params.id]);
+app.put('/api/categories/:id', async (req, res) => {
+    const { name } = req.body;
+    const result = await db.run("UPDATE categories SET name = ? WHERE id = ?", [name, req.params.id]);
     return { updated: result.changes };
 });
 
-app.delete('/api/categories/:id', async (request, reply) => {
-    const result = await db.run("DELETE FROM categories WHERE id = ?", [request.params.id]);
+app.delete('/api/categories/:id', async (req, res) => {
+    // Check if category has prompts
+    const count = await db.get("SELECT COUNT(*) as c FROM prompts WHERE category_id = ?", [req.params.id]);
+    if (count.c > 0) {
+        return res.code(400).send({ error: "No se puede borrar; tiene prompts asociados." });
+    }
+    const result = await db.run("DELETE FROM categories WHERE id = ?", [req.params.id]);
     return { deleted: result.changes };
 });
 
 // Prompts API
-app.get('/api/prompts', async (request, reply) => {
-    const { search, category, tag } = request.query;
+app.get('/api/prompts', async (req, res) => {
+    const { search, category } = req.query;
     let query = `
         SELECT p.*, c.name as category_name 
         FROM prompts p 
@@ -109,72 +110,48 @@ app.get('/api/prompts', async (request, reply) => {
     const conditions = [];
 
     if (search) {
-        conditions.push("(p.title LIKE ? OR p.content LIKE ?)");
-        params.push(`%${search}%`, `%${search}%`);
+        conditions.push("(p.title LIKE ? OR p.content LIKE ? OR p.tags LIKE ?)");
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-    if (category) {
+    if (category && category !== 'Todos') {
         conditions.push("c.name = ?");
         params.push(category);
-    }
-    if (tag) {
-        conditions.push("p.tags LIKE ?");
-        params.push(`%${tag}%`);
     }
 
     if (conditions.length > 0) {
         query += " WHERE " + conditions.join(" AND ");
     }
-
-    query += " ORDER BY p.created_at DESC"; // Or updated_at if preferred
-
+    query += " ORDER BY p.created_at DESC";
     return await db.all(query, params);
 });
 
-app.post('/api/prompts', async (request, reply) => {
-    const { title, content, tags, category_name } = request.body;
-    let category_id = null;
-    if (category_name) {
-        const category = await db.get("SELECT id FROM categories WHERE name = ?", [category_name]);
-        if (category) {
-            category_id = category.id;
-        }
-    }
-
+app.post('/api/prompts', async (req, res) => {
+    const { title, content, tags, category_name } = req.body;
+    const cat = await db.get("SELECT id FROM categories WHERE name = ?", [category_name]);
     const result = await db.run(
         "INSERT INTO prompts (title, content, tags, category_id) VALUES (?, ?, ?, ?)",
-        [title, content, tags, category_id]
+        [title, content, tags, cat?.id]
     );
-    const promptId = result.lastID;
-
-    // Auto-create first version
-    await db.run("INSERT INTO prompt_versions (prompt_id, content, version_number) VALUES (?, ?, 1)", [promptId, content]);
-    return { id: promptId };
+    const id = result.lastID;
+    await db.run("INSERT INTO prompt_versions (prompt_id, content, version_number) VALUES (?, ?, 1)", [id, content]);
+    return { id };
 });
 
-app.put('/api/prompts/:id', async (request, reply) => {
-    const { title, content, tags, category_name } = request.body;
-    const promptId = request.params.id;
+app.put('/api/prompts/:id', async (req, res) => {
+    const { title, content, tags, category_name } = req.body;
+    const id = req.params.id;
+    const cat = await db.get("SELECT id FROM categories WHERE name = ?", [category_name]);
 
-    let category_id = null;
-    if (category_name) {
-        const category = await db.get("SELECT id FROM categories WHERE name = ?", [category_name]);
-        if (category) {
-            category_id = category.id;
-        }
-    }
+    // Versioning
+    const row = await db.get("SELECT MAX(version_number) as v FROM prompt_versions WHERE prompt_id = ?", [id]);
+    const nextV = (row?.v || 0) + 1;
 
-    // Get current version count to increment
-    const row = await db.get("SELECT MAX(version_number) as max_v FROM prompt_versions WHERE prompt_id = ?", [promptId]);
-    const nextVersion = (row?.max_v || 0) + 1;
-
-    const result = await db.run(
+    await db.run(
         "UPDATE prompts SET title = ?, content = ?, tags = ?, category_id = ? WHERE id = ?",
-        [title, content, tags, category_id, promptId]
+        [title, content, tags, cat?.id, id]
     );
-
-    // Log new version
-    await db.run("INSERT INTO prompt_versions (prompt_id, content, version_number) VALUES (?, ?, ?)", [promptId, content, nextVersion]);
-    return { updated: result.changes, version: nextVersion };
+    await db.run("INSERT INTO prompt_versions (prompt_id, content, version_number) VALUES (?, ?, ?)", [id, content, nextV]);
+    return { id, version: nextV };
 });
 
 app.get('/api/prompts/:id', async (request, reply) => {

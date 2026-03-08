@@ -17,7 +17,9 @@ const App = () => {
     const [selectedPrompt, setSelectedPrompt] = useState(null);
     const [isAdding, setIsAdding] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [settingsTab, setSettingsTab] = useState('general'); // 'general' | 'categories'
     const [editingPrompt, setEditingPrompt] = useState(null);
+    const [editingCategory, setEditingCategory] = useState(null);
     const [history, setHistory] = useState([]);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
@@ -129,10 +131,16 @@ const App = () => {
         fetchAllData();
     };
 
-    const handleDeleteCategory = async (id) => {
-        if (!confirm('¿Borrar esta categoría?')) return;
-        await fetch(`http://localhost:3000/api/categories/${id}`, { method: 'DELETE' });
-        fetchAllData();
+    const handleRenameCategory = async (id, newName) => {
+        try {
+            await fetch(`http://localhost:3000/api/categories/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName })
+            });
+            setEditingCategory(null);
+            fetchAllData();
+        } catch (err) { console.error(err); }
     };
 
     const applyFilters = () => {
@@ -161,12 +169,23 @@ const App = () => {
             if (res.ok) {
                 setIsAdding(false);
                 setNewPrompt({ title: '', content: '', category_name: 'Programación', tags: '' });
-                fetchPrompts();
+                fetchAllData();
             }
         } catch (err) {
             console.error('Error adding prompt:', err);
             alert('Error connecting to backend for saving.');
         }
+    };
+
+    const handleDeleteCategory = async (id) => {
+        if (!confirm('¿Borrar esta categoría?')) return;
+        const res = await fetch(`http://localhost:3000/api/categories/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.error || 'Error al borrar');
+            return;
+        }
+        fetchAllData();
     };
 
     return (
@@ -183,19 +202,19 @@ const App = () => {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <button className="btn btn-primary" onClick={() => setIsAdding(true)}>
-                    <Plus size={18} /> Nuevo Prompt
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-primary" onClick={() => setIsAdding(true)}>
+                        <Plus size={18} /> Nuevo Prompt
+                    </button>
+                    <button className="btn" style={{ padding: '0.5rem' }} onClick={() => setIsSettingsOpen(true)}>
+                        <ExternalLink size={20} />
+                    </button>
+                </div>
             </header>
 
             <div className="main-layout">
                 <aside className="sidebar glass-panel">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 1rem', marginBottom: '1rem' }}>
-                        <h4 style={{ color: '#9ca3af', fontSize: '0.8rem', textTransform: 'uppercase', margin: 0 }}>Categorías</h4>
-                        <button className="btn" style={{ padding: '0.2rem', background: 'transparent' }} onClick={() => setIsSettingsOpen(true)}>
-                            <ExternalLink size={14} color="#9ca3af" />
-                        </button>
-                    </div>
+                    <h4 style={{ padding: '0 1rem', marginBottom: '1rem', color: '#9ca3af', fontSize: '0.8rem', textTransform: 'uppercase' }}>Categorías</h4>
                     {categories.map(cat => (
                         <div
                             key={cat}
@@ -244,6 +263,44 @@ const App = () => {
                 </main>
             </div>
 
+            {/* Prompt Creation Modal */}
+            {isAdding && (
+                <div className="modal-overlay" onClick={() => setIsAdding(false)}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setIsAdding(false)}>✕</button>
+                        <h2>Añadir Nuevo Prompt</h2>
+                        <form onSubmit={handleAddPrompt} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                            <input
+                                type="text"
+                                placeholder="Título del Prompt"
+                                className="search-input"
+                                style={{ width: '100%', background: 'var(--glass-bg)' }}
+                                value={newPrompt.title}
+                                onChange={e => setNewPrompt({ ...newPrompt, title: e.target.value })}
+                                required
+                            />
+                            <select
+                                className="search-input"
+                                style={{ width: '100%', background: 'var(--glass-bg)' }}
+                                value={newPrompt.category_name}
+                                onChange={e => setNewPrompt({ ...newPrompt, category_name: e.target.value })}
+                            >
+                                {categories.filter(c => c !== 'Todos').map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <textarea
+                                placeholder="Contenido del Prompt..."
+                                className="search-input"
+                                style={{ width: '100%', height: '150px', background: 'var(--glass-bg)', padding: '1rem' }}
+                                value={newPrompt.content}
+                                onChange={e => setNewPrompt({ ...newPrompt, content: e.target.value })}
+                                required
+                            />
+                            <button type="submit" className="btn btn-primary" style={{ padding: '1rem' }}>Crear Prompt</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Detail Modal */}
             {selectedPrompt && (
                 <div className="modal-overlay" onClick={() => setSelectedPrompt(null)}>
@@ -261,7 +318,10 @@ const App = () => {
                                             value={editingPrompt?.title || ''}
                                             onChange={e => setEditingPrompt({ ...editingPrompt, title: e.target.value })}
                                         />
-                                        <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>Guardar</button>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button type="submit" className="btn btn-primary">Guardar</button>
+                                            <button type="button" className="btn" onClick={() => copyToClipboard(editingPrompt.content)}><Copy size={16} /></button>
+                                        </div>
                                     </div>
                                     <select
                                         className="search-input"
@@ -281,8 +341,8 @@ const App = () => {
 
                                 {/* Comments Section */}
                                 <div style={{ marginTop: '2rem' }}>
-                                    <h4 style={{ marginBottom: '1rem' }}>Comentarios & Explicaciones</h4>
-                                    <div className="comments-list">
+                                    <h4>Comentarios & Notas</h4>
+                                    <div className="comments-list" style={{ marginTop: '1rem' }}>
                                         {comments.map(c => (
                                             <div key={c.id} className="nav-item" style={{ background: 'rgba(255,255,255,0.02)', cursor: 'default', padding: '0.8rem', marginBottom: '0.5rem' }}>
                                                 <p style={{ fontSize: '0.9rem', marginBottom: '0.2rem' }}>{c.text}</p>
@@ -305,13 +365,13 @@ const App = () => {
 
                             {/* Right Column: History */}
                             <div style={{ flex: 1, borderLeft: '1px solid var(--glass-border)', paddingLeft: '1.5rem' }}>
-                                <h4 style={{ marginBottom: '1rem' }}>Historial de Versiones</h4>
-                                <div className="history-list">
+                                <h4>Historial de Versiones</h4>
+                                <div className="history-list" style={{ marginTop: '1rem' }}>
                                     {history.map(v => (
                                         <div
                                             key={v.id}
                                             className="nav-item"
-                                            style={{ padding: '0.8rem', fontSize: '0.85rem' }}
+                                            style={{ padding: '0.8rem', fontSize: '0.85rem', marginBottom: '0.5rem' }}
                                             onClick={() => setEditingPrompt({ ...editingPrompt, content: v.content })}
                                         >
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -330,31 +390,80 @@ const App = () => {
                 </div>
             )}
 
-            {/* Settings Modal */}
+            {/* Settings Modal Hub */}
             {isSettingsOpen && (
                 <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
-                    <div className="modal-content glass-panel" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+                    <div className="modal-content glass-panel" style={{ maxWidth: '700px', width: '90%', minHeight: '500px' }} onClick={e => e.stopPropagation()}>
                         <button className="modal-close" onClick={() => setIsSettingsOpen(false)}>✕</button>
-                        <h2>Gestión de Categorías</h2>
-                        <div style={{ marginTop: '1.5rem' }}>
-                            {managingCategories.map(cat => (
-                                <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '8px', marginBottom: '0.5rem' }}>
-                                    <span>{cat.name}</span>
-                                    <button className="btn" style={{ padding: '0.2rem', color: '#ef4444' }} onClick={() => handleDeleteCategory(cat.id)}>
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-                            <input
-                                className="search-input"
-                                style={{ flex: 1 }}
-                                placeholder="Nueva categoría..."
-                                value={newCategoryName}
-                                onChange={e => setNewCategoryName(e.target.value)}
-                            />
-                            <button className="btn btn-primary" onClick={handleAddCategory}>Añadir</button>
+
+                        <div style={{ display: 'flex', gap: '2rem', height: '100%' }}>
+                            {/* Settings Sidebar */}
+                            <div style={{ width: '180px', borderRight: '1px solid var(--glass-border)', paddingRight: '1rem' }}>
+                                <h3 style={{ marginBottom: '2rem' }}>Ajustes</h3>
+                                <div
+                                    className={`nav-item ${settingsTab === 'general' ? 'active' : ''}`}
+                                    onClick={() => setSettingsTab('general')}
+                                >General</div>
+                                <div
+                                    className={`nav-item ${settingsTab === 'categories' ? 'active' : ''}`}
+                                    onClick={() => setSettingsTab('categories')}
+                                >Categorías</div>
+                            </div>
+
+                            {/* Settings Content */}
+                            <div style={{ flex: 1, padding: '1rem 0' }}>
+                                {settingsTab === 'general' ? (
+                                    <div className="settings-section">
+                                        <h4>Configuración General</h4>
+                                        <div style={{ marginTop: '2rem' }}>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.6 }}>Nombre de la Bóveda</label>
+                                            <input className="search-input" value="VaroPromptVault" readOnly style={{ width: '100%' }} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="settings-section">
+                                        <h4>Gestión de Categorías</h4>
+                                        <div style={{ marginTop: '1.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                                            {managingCategories.map(cat => (
+                                                <div key={cat.id} className="nav-item" style={{ background: 'rgba(255,255,255,0.02)', margin: '0.5rem 0', cursor: 'default', display: 'flex', justifyContent: 'space-between' }}>
+                                                    {editingCategory?.id === cat.id ? (
+                                                        <input
+                                                            autoFocus
+                                                            className="search-input"
+                                                            style={{ flex: 1, margin: 0, padding: '2px 5px' }}
+                                                            value={editingCategory.name}
+                                                            onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                                                            onBlur={() => handleRenameCategory(cat.id, editingCategory.name)}
+                                                            onKeyDown={e => e.key === 'Enter' && handleRenameCategory(cat.id, editingCategory.name)}
+                                                        />
+                                                    ) : (
+                                                        <span style={{ flex: 1 }}>{cat.name}</span>
+                                                    )}
+
+                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                        <button className="btn" style={{ padding: '2px', opacity: 0.5 }} onClick={() => setEditingCategory(cat)}>
+                                                            Edit
+                                                        </button>
+                                                        <button className="btn" style={{ padding: '2px', color: '#ef4444' }} onClick={() => handleDeleteCategory(cat.id)}>
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div style={{ marginTop: '2rem', display: 'flex', gap: '0.5rem' }}>
+                                            <input
+                                                className="search-input"
+                                                placeholder="Añadir nueva..."
+                                                style={{ flex: 1 }}
+                                                value={newCategoryName}
+                                                onChange={e => setNewCategoryName(e.target.value)}
+                                            />
+                                            <button className="btn btn-primary" onClick={handleAddCategory}>Añadir</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
