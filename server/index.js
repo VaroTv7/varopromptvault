@@ -5,6 +5,7 @@ import sqlite3 from 'sqlite3';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fastifyStatic from '@fastify/static';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dbPath = process.env.DB_PATH || path.join(__dirname, '../data/promptvault.db');
@@ -14,11 +15,14 @@ const app = fastify({ logger: true });
 // Register CORS
 await app.register(cors, { origin: '*' });
 
-// Register Static for Frontend
-await app.register(fastifyStatic, {
-    root: path.join(__dirname, '../client/dist'),
-    prefix: '/',
-});
+// Register Static for Frontend ONLY if it exists
+const distPath = path.join(__dirname, '../client/dist');
+if (fs.existsSync(distPath)) {
+    await app.register(fastifyStatic, {
+        root: distPath,
+        prefix: '/',
+    });
+}
 
 // Database initialization
 const db = await open({
@@ -189,14 +193,6 @@ app.post('/api/prompts/:id/comments', async (request, reply) => {
     const { text } = request.body;
     const result = await db.run("INSERT INTO comments (prompt_id, text) VALUES (?, ?)", [request.params.id, text]);
     return { id: result.lastID };
-});
-
-try {
-    const result = await db.run('INSERT INTO categories (name) VALUES (?)', [name]);
-    return { id: result.lastID };
-} catch (err) {
-    reply.code(400).send({ error: 'Category already exists' });
-}
 });
 
 // Start Server

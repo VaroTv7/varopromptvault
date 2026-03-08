@@ -125,13 +125,23 @@ const App = () => {
 
     const handleAddCategory = async () => {
         if (!newCategoryName) return;
-        await fetch('http://localhost:3000/api/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newCategoryName })
-        });
-        setNewCategoryName('');
-        fetchAllData();
+        try {
+            const res = await fetch('http://localhost:3000/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCategoryName })
+            });
+            if (res.ok) {
+                setNewCategoryName('');
+                fetchAllData();
+            } else {
+                const data = await res.json();
+                alert(data.error || "Error al añadir categoría");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión al añadir categoría");
+        }
     };
 
     const handleRenameCategory = async (id, newName) => {
