@@ -2,12 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Copy, Tag, MessageSquare, Trash2, ExternalLink } from 'lucide-react';
 
 const App = () => {
-    const [allPrompts, setAllPrompts] = useState([]);
+    const [allPrompts, setAllPrompts] = useState(() => {
+        const saved = localStorage.getItem('vp_prompts');
+        return saved ? JSON.parse(saved) : [];
+    });
     const [filteredPrompts, setFilteredPrompts] = useState([]);
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState(() => {
+        const saved = localStorage.getItem('vp_categories');
+        return saved ? JSON.parse(saved) : ['Todos'];
+    });
     const [activeCategory, setActiveCategory] = useState('Todos');
     const [search, setSearch] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(allPrompts.length === 0);
     const [selectedPrompt, setSelectedPrompt] = useState(null);
     const [isAdding, setIsAdding] = useState(false);
     const [newPrompt, setNewPrompt] = useState({ title: '', content: '', category_name: 'Programación', tags: '' });
@@ -21,7 +27,6 @@ const App = () => {
     }, [search, activeCategory, allPrompts]);
 
     const fetchAllData = async () => {
-        setLoading(true);
         try {
             const [pRes, cRes] = await Promise.all([
                 fetch('http://localhost:3000/api/prompts'),
@@ -32,17 +37,22 @@ const App = () => {
             const cData = await cRes.json();
 
             setAllPrompts(pData);
-            setCategories(['Todos', ...cData.map(c => c.name)]);
+            const cats = ['Todos', ...cData.map(c => c.name)];
+            setCategories(cats);
+
+            // Sync cache
+            localStorage.setItem('vp_prompts', JSON.stringify(pData));
+            localStorage.setItem('vp_categories', JSON.stringify(cats));
         } catch (err) {
-            console.warn('Backend unavailable, using fallback data');
-            const fallback = [
-                { id: 1, title: 'Generador de Código Python', content: 'Escribe un script en Python...', tags: 'python,dev', category_name: 'Programación' },
-                { id: 2, title: 'Optimización de Landing Page', content: 'Actúa como un experto en Copywriting...', tags: 'copy,sales', category_name: 'Copywriting' },
-                { id: 3, title: 'Estrategia de Ventas B2B', content: 'Diseña un embudo de ventas para...', tags: 'ventas,b2b', category_name: 'Ventas' },
-                { id: 4, title: 'Auditoría SEO On-Page', content: 'Analiza la estructura de encabezados...', tags: 'seo,web', category_name: 'SEO' },
-            ];
-            setAllPrompts(fallback);
-            setCategories(['Todos', 'Programación', 'Ventas', 'Copywriting', 'SEO']);
+            console.warn('Backend unavailable, using current state/fallback');
+            if (allPrompts.length === 0) {
+                const fallback = [
+                    { id: 1, title: 'Generador de Código Python', content: 'Escribe un script en Python...', tags: 'python,dev', category_name: 'Programación' },
+                    { id: 2, title: 'Optimización de Landing Page', content: 'Actúa como un experto en Copywriting...', tags: 'copy,sales', category_name: 'Copywriting' },
+                ];
+                setAllPrompts(fallback);
+                setCategories(['Todos', 'Programación', 'Ventas', 'Copywriting', 'SEO']);
+            }
         } finally {
             setLoading(false);
         }
@@ -116,8 +126,16 @@ const App = () => {
                 </aside>
 
                 <main>
-                    {loading ? (
-                        <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>Sincronizando archivo maestro...</div>
+                    {loading && filteredPrompts.length === 0 ? (
+                        <div className="stats-grid">
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="prompt-card glass-panel skeleton-card" style={{ height: '200px' }}>
+                                    <div className="skeleton-title"></div>
+                                    <div className="skeleton-text"></div>
+                                    <div className="skeleton-text" style={{ width: '60%' }}></div>
+                                </div>
+                            ))}
+                        </div>
                     ) : (
                         <div className="stats-grid">
                             {filteredPrompts.map((prompt) => (
