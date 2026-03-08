@@ -22,16 +22,28 @@ const App = () => {
             }
 
             const res = await fetch(url);
+            if (!res.ok) throw new Error('Network response was not ok');
             const data = await res.json();
             setPrompts(data);
             setLoading(false);
         } catch (err) {
-            console.error('Error fetching prompts:', err);
-            // Fallback
-            setPrompts([
-                { id: 1, title: 'Generador de Código Python', content: 'Escribe un script en Python que realice el análisis de datos de un archivo CSV y genere una gráfica de barras usando Matplotlib.\n\nInstrucciones:\n1. Usa pandas para el análisis.\n2. Asegúrate de manejar errores de archivo no encontrado.', tags: 'python,dev', category_name: 'Programación' },
-                { id: 2, title: 'Asistente de Marketing', content: 'Actúa como un experto en marketing digital con 10 años de experiencia. Redacta 5 copies variados para un anuncio de Facebook sobre un nuevo curso de IA.\n\nPúblico objetivo: Dueños de negocios pequeños.', tags: 'marketing,seo', category_name: 'Ventas' },
-            ]);
+            console.warn('Real backend fetch failed, using filtered fallback:', err);
+            // Fallback logic that respects filters for better UX during testing
+            const hardcoded = [
+                { id: 1, title: 'Generador de Código Python', content: 'Escribe un script en Python que realice el análisis de datos de un archivo CSV...', tags: 'python,dev', category_name: 'Programación' },
+                { id: 2, title: 'Optimización de Landing Page', content: 'Actúa como un experto en Copywriting y optimiza el siguiente título...', tags: 'copy,sales', category_name: 'Copywriting' },
+                { id: 3, title: 'Estrategia de Ventas B2B', content: 'Diseña un embudo de ventas para...', tags: 'ventas,b2b', category_name: 'Ventas' },
+                { id: 4, title: 'Auditoría SEO On-Page', content: 'Analiza la estructura de encabezados...', tags: 'seo,web', category_name: 'SEO' },
+            ];
+
+            const filtered = hardcoded.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
+                    p.content.toLowerCase().includes(search.toLowerCase());
+                const matchesCat = activeCategory === 'Todos' || p.category_name === activeCategory;
+                return matchesSearch && matchesCat;
+            });
+
+            setPrompts(filtered);
             setLoading(false);
         }
     };
