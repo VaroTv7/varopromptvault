@@ -74,8 +74,8 @@ const App = () => {
     const fetchAllData = async () => {
         try {
             const [pRes, cRes] = await Promise.all([
-                fetch('http://localhost:3000/api/prompts'),
-                fetch('http://localhost:3000/api/categories')
+                fetch('http://localhost:6100/api/prompts'),
+                fetch('http://localhost:6100/api/categories')
             ]);
 
             const pData = await pRes.json();
@@ -111,13 +111,13 @@ const App = () => {
     };
 
     const fetchHistory = async (id) => {
-        const res = await fetch(`http://localhost:3000/api/prompts/${id}/history`);
+        const res = await fetch(`http://localhost:6100/api/prompts/${id}/history`);
         const data = await res.json();
         setHistory(data);
     };
 
     const fetchComments = async (id) => {
-        const res = await fetch(`http://localhost:3000/api/prompts/${id}/comments`);
+        const res = await fetch(`http://localhost:6100/api/prompts/${id}/comments`);
         const data = await res.json();
         setComments(data);
     };
@@ -125,7 +125,7 @@ const App = () => {
     const handleUpdatePrompt = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`http://localhost:3000/api/prompts/${editingPrompt.id}`, {
+            const res = await fetch(`http://localhost:6100/api/prompts/${editingPrompt.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editingPrompt)
@@ -141,7 +141,7 @@ const App = () => {
     const handleAddComment = async () => {
         if (!newComment) return;
         try {
-            await fetch(`http://localhost:3000/api/prompts/${selectedPrompt.id}/comments`, {
+            await fetch(`http://localhost:6100/api/prompts/${selectedPrompt.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newComment })
@@ -154,7 +154,7 @@ const App = () => {
     const handleAddCategory = async () => {
         if (!newCategoryName) return;
         try {
-            const res = await fetch('http://localhost:3000/api/categories', {
+            const res = await fetch('http://localhost:6100/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newCategoryName })
@@ -175,7 +175,7 @@ const App = () => {
     const handleRenameCategory = async (id, newName) => {
         if (!newName || newName.trim() === "") return;
         try {
-            const res = await fetch(`http://localhost:3000/api/categories/${id}`, {
+            const res = await fetch(`http://localhost:6100/api/categories/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newName })
@@ -229,7 +229,7 @@ const App = () => {
     const handleAddPrompt = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:3000/api/prompts', {
+            const res = await fetch('http://localhost:6100/api/prompts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newPrompt)
@@ -247,7 +247,7 @@ const App = () => {
 
     const handleDeleteCategory = async (id) => {
         if (!confirm('¿Borrar esta categoría?')) return;
-        const res = await fetch(`http://localhost:3000/api/categories/${id}`, { method: 'DELETE' });
+        const res = await fetch(`http://localhost:6100/api/categories/${id}`, { method: 'DELETE' });
         if (!res.ok) {
             const data = await res.json();
             alert(data.error || 'Error al borrar');

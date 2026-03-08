@@ -57,7 +57,7 @@ cd server
 npm install
 npm start   # O 'node index.js'
 ```
-*El servidor correrá en `http://localhost:3000` y creará la base de datos automáticamente si no existe.*
+*El servidor correrá en `http://localhost:6100` y creará la base de datos automáticamente si no existe.*
 
 ### Paso 3: Ejecutar el Frontend (UI)
 Abre una nueva pestaña en tu terminal:
@@ -66,7 +66,7 @@ cd client
 npm install
 npm run dev
 ```
-*La interfaz estará disponible en `http://localhost:5173` (u otro puerto si está ocupado).*
+*La interfaz estará disponible en `http://localhost:6101` (u otro puerto si está ocupado).*
 
 ---
 
