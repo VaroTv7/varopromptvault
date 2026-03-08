@@ -8,6 +8,8 @@ const App = () => {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [selectedPrompt, setSelectedPrompt] = useState(null);
+    const [isAdding, setIsAdding] = useState(false);
+    const [newPrompt, setNewPrompt] = useState({ title: '', content: '', category_name: 'Programación', tags: '' });
 
     useEffect(() => {
         fetchPrompts();
@@ -60,7 +62,26 @@ const App = () => {
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
-        // Visual feedback logic...
+        // Visual feedback would go here
+    };
+
+    const handleAddPrompt = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('http://localhost:3000/api/prompts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newPrompt)
+            });
+            if (res.ok) {
+                setIsAdding(false);
+                setNewPrompt({ title: '', content: '', category_name: 'Programación', tags: '' });
+                fetchPrompts();
+            }
+        } catch (err) {
+            console.error('Error adding prompt:', err);
+            alert('Error connecting to backend for saving.');
+        }
     };
 
     return (
@@ -77,7 +98,7 @@ const App = () => {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <button className="btn btn-primary">
+                <button className="btn btn-primary" onClick={() => setIsAdding(true)}>
                     <Plus size={18} /> Nuevo Prompt
                 </button>
             </header>
