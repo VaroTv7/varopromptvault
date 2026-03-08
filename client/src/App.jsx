@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Copy, Tag, MessageSquare, Trash2, ExternalLink } from 'lucide-react';
+import { Search, Plus, Copy, Tag, MessageSquare, Trash2, Settings } from 'lucide-react';
 
 const App = () => {
     const [allPrompts, setAllPrompts] = useState(() => {
@@ -56,6 +56,7 @@ const App = () => {
             setAllPrompts(pData);
             const cats = ['Todos', ...cData.map(c => c.name)];
             setCategories(cats);
+            setManagingCategories(cData);
 
             // Sync cache
             localStorage.setItem('vp_prompts', JSON.stringify(pData));
@@ -72,10 +73,6 @@ const App = () => {
             }
         } finally {
             setLoading(false);
-            // Also fetch raw categories for management
-            fetch('http://localhost:3000/api/categories')
-                .then(r => r.json())
-                .then(data => setManagingCategories(data));
         }
     };
 
@@ -207,7 +204,7 @@ const App = () => {
                         <Plus size={18} /> Nuevo Prompt
                     </button>
                     <button className="btn" style={{ padding: '0.5rem' }} onClick={() => setIsSettingsOpen(true)}>
-                        <ExternalLink size={20} />
+                        <Settings size={20} />
                     </button>
                 </div>
             </header>
