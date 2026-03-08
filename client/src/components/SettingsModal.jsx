@@ -13,7 +13,8 @@ const SettingsModal = ({
     handleDeleteCategory,
     newCategoryName,
     setNewCategoryName,
-    handleAddCategory
+    handleAddCategory,
+    handleExportData
 }) => {
     if (!isSettingsOpen) return null;
 
@@ -43,9 +44,23 @@ const SettingsModal = ({
                                 <h4>Configuración General</h4>
                                 <div style={{ marginTop: '2rem' }}>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.6 }}>Nombre de la Bóveda</label>
-                                    <input className="search-input" value="VaroPromptVault" readOnly style={{ width: '100%' }} />
+                                    <input className="search-input" value="VaroPromptVault" readOnly style={{ width: '100%', marginBottom: '2rem' }} />
+                                </div>
+                                <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '2rem' }}>
+                                    <h4>Copias de Seguridad</h4>
+                                    <p style={{ opacity: 0.6, fontSize: '0.9rem', margin: '0.5rem 0' }}>
+                                        Exporta todos tus prompts y categorías a un archivo local .json para tener un respaldo seguro de tu conocimiento.
+                                    </p>
+                                    <button
+                                        className="btn btn-primary"
+                                        style={{ marginTop: '1rem' }}
+                                        onClick={handleExportData}
+                                    >
+                                        Exportar Backup (JSON)
+                                    </button>
                                 </div>
                             </div>
+
                         ) : (
                             <div className="settings-section">
                                 <h4>Gestión de Categorías</h4>
