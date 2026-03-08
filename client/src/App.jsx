@@ -70,6 +70,12 @@ const App = () => {
                 ];
                 setAllPrompts(fallback);
                 setCategories(['Todos', 'Programación', 'Ventas', 'Copywriting', 'SEO']);
+                setManagingCategories([
+                    { id: 1, name: 'Programación' },
+                    { id: 2, name: 'Ventas' },
+                    { id: 3, name: 'Copywriting' },
+                    { id: 4, name: 'SEO' }
+                ]);
             }
         } finally {
             setLoading(false);
@@ -421,13 +427,14 @@ const App = () => {
                                     <div className="settings-section">
                                         <h4>Gestión de Categorías</h4>
                                         <div style={{ marginTop: '1.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                                            {managingCategories.length === 0 && <div style={{ opacity: 0.5, textAlign: 'center', padding: '1rem' }}>Sincronizando categorías...</div>}
                                             {managingCategories.map(cat => (
-                                                <div key={cat.id} className="nav-item" style={{ background: 'rgba(255,255,255,0.02)', margin: '0.5rem 0', cursor: 'default', display: 'flex', justifyContent: 'space-between' }}>
+                                                <div key={cat.id || cat.name} className="nav-item" style={{ background: 'rgba(255,255,255,0.02)', margin: '0.5rem 0', cursor: 'default', display: 'flex', justifyContent: 'space-between' }}>
                                                     {editingCategory?.id === cat.id ? (
                                                         <input
                                                             autoFocus
                                                             className="search-input"
-                                                            style={{ flex: 1, margin: 0, padding: '2px 5px' }}
+                                                            style={{ flex: 1, margin: 0, padding: '2px 5px', background: 'var(--glass-bg)' }}
                                                             value={editingCategory.name}
                                                             onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
                                                             onBlur={() => handleRenameCategory(cat.id, editingCategory.name)}
@@ -438,8 +445,8 @@ const App = () => {
                                                     )}
 
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button className="btn" style={{ padding: '2px', opacity: 0.5 }} onClick={() => setEditingCategory(cat)}>
-                                                            Edit
+                                                        <button className="btn" style={{ padding: '0.2rem 0.5rem', opacity: 0.8, fontSize: '0.7rem' }} onClick={() => setEditingCategory(cat)}>
+                                                            Renombrar
                                                         </button>
                                                         <button className="btn" style={{ padding: '2px', color: '#ef4444' }} onClick={() => handleDeleteCategory(cat.id)}>
                                                             <Trash2 size={14} />
