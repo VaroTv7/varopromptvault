@@ -1,63 +1,76 @@
-# 📜 VaroPromptVault v1.0.0
-### El Almacén Maestro de Prompts para IA (Pro Edition)
+# 💎 VaroPromptVault
 
-**VaroPromptVault** es una solución profesional, ligera y estéticamente superior para el almacenamiento y gestión de prompts de inteligencia artificial. Ofrece una experiencia de usuario fluida con estética **Glassmorphism** y funcionalidades de alta calidad de vida (QoL) para optimizar cualquier flujo de trabajo con LLMs.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![React](https://img.shields.io/badge/React-18.x-61dafb.svg?logo=react)
+![Fastify](https://img.shields.io/badge/Fastify-4.x-000000.svg?logo=fastify)
+![SQLite](https://img.shields.io/badge/SQLite-3.x-003B57.svg?logo=sqlite)
 
----
-
-## 🚀 Características Principales
-
-*   **⚡ Interfaz Premium:** Diseño en modo oscuro con efectos de transparencia y desenfoque (Glassmorphism).
-*   **🔍 Búsqueda Atómica:** Buscador instantáneo por título y contenido con soporte para categorías.
-*   **📂 Organización Inteligente:** Filtros por categorías configurables y etiquetado dinámico.
-*   **📋 QoL Extremo:** Copiado al portapapeles con un solo clic y vista detallada ampliada (Modal).
-*   **🛠️ Tech Stack 2025:**
-    *   **Frontend:** React 18 + Vite (Vanilla CSS).
-    *   **Backend:** Fastify (Node.js 22 LTS).
-    *   **Database:** SQLite3 para persistencia sólida y portable.
-*   **🐳 Docker Orchestration:** Incluye configuración multi-stage optimizada para producción.
+**VaroPromptVault** es un repositorio personal y profesional para gestionar, almacenar y versionar tus prompts de Inteligencia Artificial. Diseñado con una interfaz "Glassmorphism" moderna y oscura, optimizado para la velocidad y la eficiencia del flujo de trabajo diario.
 
 ---
 
-## 🛠️ Instalación y despliegue
+## ✨ Características Principales
 
-### Requisitos previos
-*   Docker & Docker Compose (Recomendado).
-*   Node.js v22+ (Para desarrollo local).
+- **🎨 Diseño Premium (Glassmorphism):** Interfaz oscura, elegante, con paneles semitransparentes y desenfoque de fondo que reduce la fatiga visual.
+- **⚡ Rendimiento Instantáneo:** Sistema de caché híbrido (`Stale-While-Revalidate` con `localStorage`) que permite a la app cargar instantáneamente sin esperar al servidor. Skeleton loaders para transiciones suaves.
+- **📝 Editor Markdown Nativo:** Usa `react-md-editor` integrado de forma nativa en la UI oscura para dar formato a los prompts (código, negritas, listas).
+- **📂 Gestión de Categorías Flexible:** Añade, edita, renombra y elimina categorías directamente desde el *Settings Hub*, con edición en-línea (*in-place editing*) y validaciones en tiempo real.
+- **⌨️ Accesos Directos (Hotkeys):**
+  - `Ctrl + N` / `Cmd + N`: Nuevo Prompt.
+  - `Ctrl + K` / `Cmd + K`: Enfocar Barra de Búsqueda Global.
+  - `Escape`: Cerrar modales rápidamente.
+- **🔄 Control de Versiones:** Mantén un historial inmutable de las ediciones de cada prompt. Si cambias un prompt, la versión anterior se guarda automáticamente.
+- **💬 Notas Técnicas:** Añade comentarios y notas de uso a cada prompt individual.
 
-### Despliegue con Docker
+---
+
+## 🏗️ Arquitectura Técnica
+
+### Frontend (Cliente)
+Construido con React (Vite) para máxima velocidad de desarrollo. Recientemente refactorizado bajo un modelo modular *"Enterprise"*:
+- **Componentes Aislados:** `Sidebar`, `PromptCard`, modales dedicados (`CreatePrompt`, `PromptDetail`, `Settings`).
+- **Iconografía:** `lucide-react` para iconos minimalistas y nítidos.
+- **Estilos:** CSS puro con variables `:root` globales, priorizando el rendimiento sin abusar de dependencias externas.
+
+### Backend (Servidor)
+API RESTful ultra-rápida.
+- **Framework:** Fastify.
+- **Base de Datos:** SQLite (`sqlite3` nativo, base de datos en `./server/data/promptvault.db`).
+- **Archivos Estáticos:** El backend es capaz de servir la compilación de Vite (carpeta `dist`) de forma independiente si es necesario a través de `@fastify/static`.
+
+---
+
+## 🚀 Instalación y Uso Local
+
+### Prerrequisitos
+- Node.js (v18 o superior).
+
+### Paso 1: Clonar el Repositorio
 ```bash
-# Puerto asignado por defecto: 8090
-docker compose up -d
+git clone https://github.com/VaroTv7/varopromptvault.git
+cd varopromptvault
 ```
 
-### Desarrollo Local
+### Paso 2: Ejecutar el Backend (API & DB)
 ```bash
-# Servidor (Puerto 3000)
-cd server && npm install && npm start
-
-# Cliente (Puerto 5173)
-cd client && npm install && npm run dev
+cd server
+npm install
+npm start   # O 'node index.js'
 ```
+*El servidor correrá en `http://localhost:3000` y creará la base de datos automáticamente si no existe.*
+
+### Paso 3: Ejecutar el Frontend (UI)
+Abre una nueva pestaña en tu terminal:
+```bash
+cd client
+npm install
+npm run dev
+```
+*La interfaz estará disponible en `http://localhost:5173` (u otro puerto si está ocupado).*
 
 ---
 
-## 📂 Estructura del Proyecto
+## 🤝 Mejoras y Contribuciones
+Si se desean hacer cambios masivos, se recomienda añadir modificaciones en componentes pequeños dentro de `client/src/components` para mantener la base de código libre de deuda técnica.
 
-*   `/client`: Frontend React con estilo Glassmorphism.
-*   `/server`: API REST construída con Fastify.
-*   `/data`: Volumen de persistencia para la base de datos SQLite.
-*   `/scripts`: Herramientas auxiliares de gestión.
-
----
-
-## 🛡️ Seguridad y Mantenimiento
-
-*   **Usuario No-Root:** Imagen Docker configurada para ejecución segura.
-*   **Capping de Recursos:** CPU limitada a 0.5 y RAM a 512MB para garantizar la estabilidad del sistema host.
-*   **Atomic Shield:** Integración completa con sistemas de backup y rotación.
-
----
-
-**Estado del Proyecto:** 🟢 NOMINAL | **Versión:** 1.0.0
-**Administrador:** varo
+*Desarrollado como una bóveda centralizada para potenciar flujos de trabajo con IAs Generativas.*
