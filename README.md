@@ -1,7 +1,7 @@
-# 📜 PromptVault v1.0.0
+# 📜 VaroPromptVault v1.0.0
 ### El Almacén Maestro de Prompts para IA (Pro Edition)
 
-**PromptVault** es una solución profesional, ligera y estéticamente superior para el almacenamiento y gestión de prompts de inteligencia artificial. Ofrece una experiencia de usuario fluida con estética **Glassmorphism** y funcionalidades de alta calidad de vida (QoL) para optimizar cualquier flujo de trabajo con LLMs.
+**VaroPromptVault** es una solución profesional, ligera y estéticamente superior para el almacenamiento y gestión de prompts de inteligencia artificial. Ofrece una experiencia de usuario fluida con estética **Glassmorphism** y funcionalidades de alta calidad de vida (QoL) para optimizar cualquier flujo de trabajo con LLMs.
 
 ---
 

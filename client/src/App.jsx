@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Copy, Tag, MessageSquare, Trash2, ExternalLink } from 'lucide-react';
 
 const App = () => {
-    const [prompts, setPrompts] = useState([]);
+    const [allPrompts, setAllPrompts] = useState([]);
+    const [filteredPrompts, setFilteredPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [activeCategory, setActiveCategory] = useState('Todos');
     const [search, setSearch] = useState('');
@@ -12,52 +13,49 @@ const App = () => {
     const [newPrompt, setNewPrompt] = useState({ title: '', content: '', category_name: 'Programación', tags: '' });
 
     useEffect(() => {
-        fetchPrompts();
-        fetchCategories();
-    }, [search, activeCategory]);
+        fetchAllData();
+    }, []);
 
-    const fetchPrompts = async () => {
+    useEffect(() => {
+        applyFilters();
+    }, [search, activeCategory, allPrompts]);
+
+    const fetchAllData = async () => {
+        setLoading(true);
         try {
-            let url = `http://localhost:3000/api/prompts?search=${search}`;
-            if (activeCategory && activeCategory !== 'Todos') {
-                url += `&category=${encodeURIComponent(activeCategory)}`;
-            }
+            const [pRes, cRes] = await Promise.all([
+                fetch('http://localhost:3000/api/prompts'),
+                fetch('http://localhost:3000/api/categories')
+            ]);
 
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Network response was not ok');
-            const data = await res.json();
-            setPrompts(data);
-            setLoading(false);
+            const pData = await pRes.json();
+            const cData = await cRes.json();
+
+            setAllPrompts(pData);
+            setCategories(['Todos', ...cData.map(c => c.name)]);
         } catch (err) {
-            console.warn('Real backend fetch failed, using filtered fallback:', err);
-            // Fallback logic that respects filters for better UX during testing
-            const hardcoded = [
-                { id: 1, title: 'Generador de Código Python', content: 'Escribe un script en Python que realice el análisis de datos de un archivo CSV...', tags: 'python,dev', category_name: 'Programación' },
-                { id: 2, title: 'Optimización de Landing Page', content: 'Actúa como un experto en Copywriting y optimiza el siguiente título...', tags: 'copy,sales', category_name: 'Copywriting' },
+            console.warn('Backend unavailable, using fallback data');
+            const fallback = [
+                { id: 1, title: 'Generador de Código Python', content: 'Escribe un script en Python...', tags: 'python,dev', category_name: 'Programación' },
+                { id: 2, title: 'Optimización de Landing Page', content: 'Actúa como un experto en Copywriting...', tags: 'copy,sales', category_name: 'Copywriting' },
                 { id: 3, title: 'Estrategia de Ventas B2B', content: 'Diseña un embudo de ventas para...', tags: 'ventas,b2b', category_name: 'Ventas' },
                 { id: 4, title: 'Auditoría SEO On-Page', content: 'Analiza la estructura de encabezados...', tags: 'seo,web', category_name: 'SEO' },
             ];
-
-            const filtered = hardcoded.filter(p => {
-                const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
-                    p.content.toLowerCase().includes(search.toLowerCase());
-                const matchesCat = activeCategory === 'Todos' || p.category_name === activeCategory;
-                return matchesSearch && matchesCat;
-            });
-
-            setPrompts(filtered);
+            setAllPrompts(fallback);
+            setCategories(['Todos', 'Programación', 'Ventas', 'Copywriting', 'SEO']);
+        } finally {
             setLoading(false);
         }
     };
 
-    const fetchCategories = async () => {
-        try {
-            const res = await fetch('http://localhost:3000/api/categories');
-            const data = await res.json();
-            setCategories(['Todos', ...data.map(c => c.name)]);
-        } catch (err) {
-            setCategories(['Todos', 'Programación', 'Ventas', 'Copywriting', 'SEO']);
-        }
+    const applyFilters = () => {
+        const filtered = allPrompts.filter(p => {
+            const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
+                p.content.toLowerCase().includes(search.toLowerCase());
+            const matchesCat = activeCategory === 'Todos' || p.category_name === activeCategory;
+            return matchesSearch && matchesCat;
+        });
+        setFilteredPrompts(filtered);
     };
 
     const copyToClipboard = (text) => {
@@ -87,7 +85,7 @@ const App = () => {
     return (
         <div className="app-container">
             <header className="header glass-panel">
-                <div className="logo">PromptVault</div>
+                <div className="logo">VaroPromptVault</div>
                 <div className="search-bar">
                     <Search size={20} color="#9ca3af" style={{ margin: 'auto 0' }} />
                     <input
@@ -122,7 +120,7 @@ const App = () => {
                         <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>Sincronizando archivo maestro...</div>
                     ) : (
                         <div className="stats-grid">
-                            {prompts.map((prompt) => (
+                            {filteredPrompts.map((prompt) => (
                                 <div key={prompt.id} className="prompt-card glass-panel" onClick={() => setSelectedPrompt(prompt)}>
                                     <div className="prompt-header">
                                         <h3 className="prompt-title">{prompt.title}</h3>
