@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Settings } from 'lucide-react';
+import { Search, Plus, Settings, HelpCircle } from 'lucide-react';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -7,6 +7,7 @@ import PromptCard from './components/PromptCard';
 import CreatePromptModal from './components/CreatePromptModal';
 import PromptDetailModal from './components/PromptDetailModal';
 import SettingsModal from './components/SettingsModal';
+import GuideModal from './components/GuideModal';
 
 const App = () => {
     const [allPrompts, setAllPrompts] = useState(() => {
@@ -24,7 +25,8 @@ const App = () => {
     const [selectedPrompt, setSelectedPrompt] = useState(null);
     const [isAdding, setIsAdding] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [settingsTab, setSettingsTab] = useState('general'); // 'general' | 'categories'
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
+    const [settingsTab, setSettingsTab] = useState('general'); // 'general' | 'categories' | 'ia'
     const [editingPrompt, setEditingPrompt] = useState(null);
     const [editingCategory, setEditingCategory] = useState(null);
     const [history, setHistory] = useState([]);
@@ -34,12 +36,27 @@ const App = () => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newPrompt, setNewPrompt] = useState({ title: '', content: '', category_name: 'Programación', tags: '' });
 
+    // AI Settings
+    const [aiSettings, setAiSettings] = useState(() => {
+        const saved = localStorage.getItem('vp_ai_settings');
+        return saved ? JSON.parse(saved) : {
+            ollamaUrl: 'http://localhost:11434',
+            defaultModel: 'llama3',
+            openaiKey: ''
+        };
+    });
+
+    useEffect(() => {
+        localStorage.setItem('vp_ai_settings', JSON.stringify(aiSettings));
+    }, [aiSettings]);
+
     // Global Hotkeys
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 setIsAdding(false);
                 setIsSettingsOpen(false);
+                setIsGuideOpen(false);
                 setSelectedPrompt(null);
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
@@ -56,12 +73,12 @@ const App = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedPrompt) {
+        if (selectedPrompt && selectedPrompt.id) {
             fetchHistory(selectedPrompt.id);
             fetchComments(selectedPrompt.id);
             setEditingPrompt({ ...selectedPrompt });
         }
-    }, [selectedPrompt]);
+    }, [selectedPrompt?.id]);
 
     useEffect(() => {
         fetchAllData();
@@ -111,15 +128,56 @@ const App = () => {
     };
 
     const fetchHistory = async (id) => {
-        const res = await fetch(`http://localhost:6100/api/prompts/${id}/history`);
-        const data = await res.json();
-        setHistory(data);
+        try {
+            const res = await fetch(`http://localhost:6100/api/history/${id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setHistory(Array.isArray(data) ? data : []);
+            } else {
+                setHistory([]);
+            }
+        } catch (err) {
+            console.error('Fetch history failed:', err);
+            setHistory([]);
+        }
     };
 
     const fetchComments = async (id) => {
-        const res = await fetch(`http://localhost:6100/api/prompts/${id}/comments`);
-        const data = await res.json();
-        setComments(data);
+        try {
+            const res = await fetch(`http://localhost:6100/api/prompts/${id}/comments`);
+            if (res.ok) {
+                const data = await res.json();
+                setComments(Array.isArray(data) ? data : []);
+            } else {
+                setComments([]);
+            }
+        } catch (err) {
+            console.error('Fetch comments failed:', err);
+            setComments([]);
+        }
+    };
+
+    const handleDeleteHistory = async (versionId) => {
+        if (!confirm('¿Borrar esta versión del historial?')) return;
+        try {
+            const res = await fetch(`http://localhost:6100/api/history/${versionId}`, { method: 'DELETE' });
+            if (res.ok) {
+                if (selectedPrompt) fetchHistory(selectedPrompt.id);
+            }
+        } catch (err) { console.error(err); }
+    };
+
+    const handleUpdateHistoryNote = async (versionId, note) => {
+        try {
+            const res = await fetch(`http://localhost:6100/api/history/${versionId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ note })
+            });
+            if (res.ok) {
+                if (selectedPrompt) fetchHistory(selectedPrompt.id);
+            }
+        } catch (err) { console.error(err); }
     };
 
     const handleUpdatePrompt = async (e) => {
@@ -272,6 +330,9 @@ const App = () => {
                     />
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn" style={{ padding: '0.5rem' }} onClick={() => setIsGuideOpen(true)}>
+                        <HelpCircle size={20} />
+                    </button>
                     <button className="btn btn-primary" onClick={() => setIsAdding(true)} title="Ctrl+N">
                         <Plus size={18} /> Nuevo Prompt
                     </button>
@@ -335,6 +396,8 @@ const App = () => {
                 setNewComment={setNewComment}
                 handleAddComment={handleAddComment}
                 copyToClipboard={copyToClipboard}
+                handleDeleteHistory={handleDeleteHistory}
+                handleUpdateHistoryNote={handleUpdateHistoryNote}
             />
 
             <SettingsModal
@@ -351,9 +414,17 @@ const App = () => {
                 setNewCategoryName={setNewCategoryName}
                 handleAddCategory={handleAddCategory}
                 handleExportData={handleExportData}
+                aiSettings={aiSettings}
+                setAiSettings={setAiSettings}
+            />
+
+            <GuideModal
+                isOpen={isGuideOpen}
+                onClose={() => setIsGuideOpen(false)}
             />
         </div>
     );
 };
 
 export default App;
+

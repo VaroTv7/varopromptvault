@@ -50,6 +50,7 @@ await db.exec(`CREATE TABLE IF NOT EXISTS prompt_versions (
     prompt_id INTEGER,
     content TEXT NOT NULL,
     version_number INTEGER,
+    note TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(prompt_id) REFERENCES prompts(id)
 );`);
@@ -181,8 +182,19 @@ app.delete('/api/prompts/:id', async (request, reply) => {
 });
 
 // Versions & Comments
-app.get('/api/prompts/:id/history', async (request, reply) => {
+app.get('/api/history/:id', async (request, reply) => {
     return await db.all("SELECT * FROM prompt_versions WHERE prompt_id = ? ORDER BY version_number DESC", [request.params.id]);
+});
+
+app.put('/api/history/:id', async (req, res) => {
+    const { note } = req.body;
+    const result = await db.run("UPDATE prompt_versions SET note = ? WHERE id = ?", [note, req.params.id]);
+    return { updated: result.changes };
+});
+
+app.delete('/api/history/:id', async (req, res) => {
+    const result = await db.run("DELETE FROM prompt_versions WHERE id = ?", [req.params.id]);
+    return { deleted: result.changes };
 });
 
 app.get('/api/prompts/:id/comments', async (request, reply) => {

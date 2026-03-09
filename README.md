@@ -11,16 +11,14 @@
 
 ## ✨ Características Principales
 
-- **🎨 Diseño Premium (Glassmorphism):** Interfaz oscura, elegante, con paneles semitransparentes y desenfoque de fondo que reduce la fatiga visual.
-- **⚡ Rendimiento Instantáneo:** Sistema de caché híbrido (`Stale-While-Revalidate` con `localStorage`) que permite a la app cargar instantáneamente sin esperar al servidor. Skeleton loaders para transiciones suaves.
-- **📝 Editor Markdown Nativo:** Usa `react-md-editor` integrado de forma nativa en la UI oscura para dar formato a los prompts (código, negritas, listas).
-- **📂 Gestión de Categorías Flexible:** Añade, edita, renombra y elimina categorías directamente desde el *Settings Hub*, con edición en-línea (*in-place editing*) y validaciones en tiempo real.
-- **⌨️ Accesos Directos (Hotkeys):**
-  - `Ctrl + N` / `Cmd + N`: Nuevo Prompt.
-  - `Ctrl + K` / `Cmd + K`: Enfocar Barra de Búsqueda Global.
-  - `Escape`: Cerrar modales rápidamente.
-- **🔄 Control de Versiones:** Mantén un historial inmutable de las ediciones de cada prompt. Si cambias un prompt, la versión anterior se guarda automáticamente.
-- **💬 Notas Técnicas:** Añade comentarios y notas de uso a cada prompt individual.
+-   **🎨 Diseño Premium (Glassmorphism):** Interfaz oscura, elegante, con paneles semitransparentes y desenfoque de fondo.
+-   **⚡ Rendimiento Instantáneo:** Sistema de caché híbrido para cargas inmediatas.
+-   **📝 Editor Markdown Nativo:** Formateo rico integrado en la UI oscura.
+-   **📂 Gestión de Categorías:** Configuración total desde el *Settings Hub*.
+-   **✨ Variables Dinámicas:** Usa `{{ variable }}` para crear plantillas interactivas y reutilizables.
+-   **🔄 Historial y Notas:** Control de versiones con capacidad de añadir notas personalizadas y eliminar registros antiguos.
+-   **❓ Guía Interactiva:** Haz clic en el botón de **Ayuda (icono de interrogación)** en la cabecera para acceder al manual de usuario amigable y detallado.
+-   **⌨️ Accesos Directos:** `Ctrl+N` (Nuevo), `Ctrl+K` (Buscar), `Esc` (Cerrar).
 
 ---
 
@@ -28,7 +26,7 @@
 
 ### Frontend (Cliente)
 Construido con React (Vite) para máxima velocidad de desarrollo. Recientemente refactorizado bajo un modelo modular *"Enterprise"*:
-- **Componentes Aislados:** `Sidebar`, `PromptCard`, modales dedicados (`CreatePrompt`, `PromptDetail`, `Settings`).
+- **Componentes Aislados:** `Sidebar`, `PromptCard`, modales dedicados (`CreatePrompt`, `PromptDetail`, `Settings`, `Guide`).
 - **Iconografía:** `lucide-react` para iconos minimalistas y nítidos.
 - **Estilos:** CSS puro con variables `:root` globales, priorizando el rendimiento sin abusar de dependencias externas.
 

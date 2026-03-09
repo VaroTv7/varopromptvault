@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Sparkles } from 'lucide-react';
 
 const SettingsModal = ({
     isSettingsOpen,
@@ -14,18 +14,20 @@ const SettingsModal = ({
     newCategoryName,
     setNewCategoryName,
     handleAddCategory,
-    handleExportData
+    handleExportData,
+    aiSettings,
+    setAiSettings
 }) => {
     if (!isSettingsOpen) return null;
 
     return (
         <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
-            <div className="modal-content glass-panel" style={{ maxWidth: '700px', width: '90%', minHeight: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-content glass-panel" style={{ maxWidth: '800px', width: '90%', minHeight: '550px' }} onClick={e => e.stopPropagation()}>
                 <button className="modal-close" onClick={() => setIsSettingsOpen(false)}>✕</button>
 
                 <div style={{ display: 'flex', gap: '2rem', height: '100%' }}>
                     {/* Settings Sidebar */}
-                    <div style={{ width: '180px', borderRight: '1px solid var(--glass-border)', paddingRight: '1rem' }}>
+                    <div style={{ width: '200px', borderRight: '1px solid var(--glass-border)', paddingRight: '1rem' }}>
                         <h3 style={{ marginBottom: '2rem' }}>Ajustes</h3>
                         <div
                             className={`nav-item ${settingsTab === 'general' ? 'active' : ''}`}
@@ -35,6 +37,14 @@ const SettingsModal = ({
                             className={`nav-item ${settingsTab === 'categories' ? 'active' : ''}`}
                             onClick={() => setSettingsTab('categories')}
                         >Categorías</div>
+                        <div
+                            className={`nav-item ${settingsTab === 'ia' ? 'active' : ''}`}
+                            onClick={() => setSettingsTab('ia')}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                            <Sparkles size={16} />
+                            IA & Conectividad
+                        </div>
                     </div>
 
                     {/* Settings Content */}
@@ -60,7 +70,48 @@ const SettingsModal = ({
                                     </button>
                                 </div>
                             </div>
+                        ) : settingsTab === 'ia' ? (
+                            <div className="settings-section">
+                                <h4>IA & Conectividad</h4>
+                                <p style={{ opacity: 0.6, fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                                    Configura los motores de IA para las funciones de refinamiento y personalización con Ollama o APIs externas.
+                                </p>
 
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.9rem' }}>Ollama Endpoint (Local)</label>
+                                    <input
+                                        className="search-input"
+                                        value={aiSettings.ollamaUrl}
+                                        onChange={e => setAiSettings({ ...aiSettings, ollamaUrl: e.target.value })}
+                                        placeholder="http://localhost:11434"
+                                        style={{ width: '100%' }}
+                                    />
+                                    <small style={{ opacity: 0.4 }}>Configuración por defecto para LLMs locales.</small>
+                                </div>
+
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.9rem' }}>Modelo por Defecto</label>
+                                    <input
+                                        className="search-input"
+                                        value={aiSettings.defaultModel}
+                                        onChange={e => setAiSettings({ ...aiSettings, defaultModel: e.target.value })}
+                                        placeholder="llama3, mistral, etc."
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+
+                                <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.8, fontSize: '0.9rem' }}>OpenAI API Key (Opcional)</label>
+                                    <input
+                                        type="password"
+                                        className="search-input"
+                                        value={aiSettings.openaiKey}
+                                        onChange={e => setAiSettings({ ...aiSettings, openaiKey: e.target.value })}
+                                        placeholder="sk-..."
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                            </div>
                         ) : (
                             <div className="settings-section">
                                 <h4>Gestión de Categorías</h4>
@@ -73,7 +124,7 @@ const SettingsModal = ({
                                                     <input
                                                         autoFocus
                                                         className="search-input"
-                                                        style={{ flex: 1, margin: 0, padding: '2px 5px', background: 'var(--glass-bg)', border: '1px solid var(--primary-color)' }}
+                                                        style={{ flex: 1, margin: 0, padding: '2px 5px', background: 'var(--glass-bg)', border: '1px solid var(--accent-primary)' }}
                                                         value={editingCategory.name}
                                                         onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
                                                         onKeyDown={e => {
