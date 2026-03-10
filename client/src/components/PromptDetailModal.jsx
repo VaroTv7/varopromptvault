@@ -8,6 +8,7 @@ const PromptDetailModal = ({
     editingPrompt,
     setEditingPrompt,
     handleUpdatePrompt,
+    handleDeletePrompt,
     categories,
     comments,
     history,
@@ -84,6 +85,16 @@ const PromptDetailModal = ({
         <div className="modal-overlay" onClick={() => setSelectedPrompt(null)}>
             <div className="modal-content glass-panel" style={{ maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                 <button className="modal-close" onClick={() => setSelectedPrompt(null)}>✕</button>
+                {editingPrompt?.id && (
+                    <button
+                        className="btn"
+                        style={{ position: 'absolute', top: '1.5rem', right: '4rem', padding: '4px 8px', color: '#ef4444', opacity: 0.6 }}
+                        onClick={() => handleDeletePrompt(editingPrompt.id)}
+                        title="Borrar prompt"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                )}
 
                 <div style={{ display: 'flex', gap: '2rem' }}>
                     {/* Left Column: Editor & Dynamic Form */}

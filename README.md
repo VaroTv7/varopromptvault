@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18.x-61dafb.svg?logo=react)
-![Fastify](https://img.shields.io/badge/Fastify-4.x-000000.svg?logo=fastify)
+![Fastify](https://img.shields.io/badge/Fastify-5.x-000000.svg?logo=fastify)
 ![SQLite](https://img.shields.io/badge/SQLite-3.x-003B57.svg?logo=sqlite)
 
 **VaroPromptVault** es un repositorio personal y profesional para gestionar, almacenar y versionar tus prompts de Inteligencia Artificial. Diseñado con una interfaz "Glassmorphism" moderna y oscura, optimizado para la velocidad y la eficiencia del flujo de trabajo diario.
@@ -68,7 +68,27 @@ npm run dev
 
 ---
 
+## 🐳 Despliegue con Docker (Recomendado para Servidores)
+
+La forma más fácil de instalar en un servidor. Solo necesitas Docker y Docker Compose.
+
+```bash
+git clone https://github.com/VaroTv7/varopromptvault.git
+cd varopromptvault
+docker compose up -d --build
+```
+
+La app estará disponible en `http://tu-servidor:8090`. Los datos se guardan en `./data/` y persisten entre reinicios.
+
+Para actualizar a una nueva versión:
+```bash
+git pull
+docker compose up -d --build
+```
+
+---
+
 ## 🤝 Mejoras y Contribuciones
 Si se desean hacer cambios masivos, se recomienda añadir modificaciones en componentes pequeños dentro de `client/src/components` para mantener la base de código libre de deuda técnica.
 
-*Desarrollado como una bóveda centralizada para potenciar flujos de trabajo con IAs Generativas.*
+*VaroPromptVault v1.5 — Diseñado como una bóveda centralizada para potenciar flujos de trabajo con IAs Generativas.*

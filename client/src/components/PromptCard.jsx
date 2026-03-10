@@ -20,7 +20,7 @@ const PromptCard = ({ prompt, setSelectedPrompt }) => {
             <p className="prompt-preview">{prompt.content}</p>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                 <div style={{ display: 'flex', gap: '0.3rem' }}>
-                    {prompt.tags?.split(',').map(tag => (
+                    {prompt.tags?.split(',').filter(t => t.trim()).map(tag => (
                         <span key={tag} className="tag-badge" style={{ background: 'transparent', border: '1px solid var(--glass-border)', fontSize: '0.6rem' }}>#{tag.trim()}</span>
                     ))}
                 </div>

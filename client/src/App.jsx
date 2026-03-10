@@ -189,11 +189,25 @@ const App = () => {
                 body: JSON.stringify(editingPrompt)
             });
             if (res.ok) {
-                const updated = { ...editingPrompt };
-                setSelectedPrompt(updated);
-                fetchAllData(); // Refresh list
+                fetchAllData();
+                fetchHistory(editingPrompt.id);
             }
         } catch (err) { console.error(err); }
+    };
+
+    const handleDeletePrompt = async (id) => {
+        if (!confirm('¿Borrar este prompt permanentemente?')) return;
+        try {
+            const res = await fetch(`http://localhost:6100/api/prompts/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setSelectedPrompt(null);
+                setEditingPrompt(null);
+                fetchAllData();
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error al borrar el prompt.');
+        }
     };
 
     const handleAddComment = async () => {
@@ -305,13 +319,18 @@ const App = () => {
 
     const handleDeleteCategory = async (id) => {
         if (!confirm('¿Borrar esta categoría?')) return;
-        const res = await fetch(`http://localhost:6100/api/categories/${id}`, { method: 'DELETE' });
-        if (!res.ok) {
-            const data = await res.json();
-            alert(data.error || 'Error al borrar');
-            return;
+        try {
+            const res = await fetch(`http://localhost:6100/api/categories/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json();
+                alert(data.error || 'Error al borrar');
+                return;
+            }
+            fetchAllData();
+        } catch (err) {
+            console.error(err);
+            alert('Error de conexión al borrar categoría.');
         }
-        fetchAllData();
     };
 
     return (
@@ -360,6 +379,11 @@ const App = () => {
                                 </div>
                             ))}
                         </div>
+                    ) : filteredPrompts.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '4rem 2rem', opacity: 0.5 }}>
+                            <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>No hay prompts todavía.</p>
+                            <p style={{ fontSize: '0.9rem' }}>Pulsa <strong>Ctrl+N</strong> o el botón <strong>"Nuevo Prompt"</strong> para crear el primero.</p>
+                        </div>
                     ) : (
                         <div className="stats-grid">
                             {filteredPrompts.map((prompt) => (
@@ -389,13 +413,13 @@ const App = () => {
                 editingPrompt={editingPrompt}
                 setEditingPrompt={setEditingPrompt}
                 handleUpdatePrompt={handleUpdatePrompt}
+                handleDeletePrompt={handleDeletePrompt}
                 categories={categories}
                 comments={comments}
                 history={history}
                 newComment={newComment}
                 setNewComment={setNewComment}
                 handleAddComment={handleAddComment}
-                copyToClipboard={copyToClipboard}
                 handleDeleteHistory={handleDeleteHistory}
                 handleUpdateHistoryNote={handleUpdateHistoryNote}
             />

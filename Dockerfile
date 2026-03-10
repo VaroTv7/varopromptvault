@@ -10,9 +10,6 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 
-# Install security updates and curl for healthchecks
-RUN apk update && apk upgrade && apk add --no-cache curl
-
 # Backend setup
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
@@ -20,18 +17,13 @@ RUN cd server && npm install --omit=dev
 COPY server/ ./server/
 COPY --from=build-frontend /app/client/dist ./client/dist
 
-# Infrastructure Cleanup scripts
-COPY scripts/migrate_legacy.sh /usr/local/bin/migrate_legacy
-COPY scripts/telegram_notify.sh /usr/local/bin/telegram_notify
-RUN chmod +x /usr/local/bin/migrate_legacy /usr/local/bin/telegram_notify
-
-# Permissions
+# Data directory for SQLite
 RUN mkdir -p /app/data && chown -R node:node /app
 USER node
 
-EXPOSE 3000
+EXPOSE 6100
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=6100
 ENV DB_PATH=/app/data/promptvault.db
 
 CMD ["node", "server/index.js"]

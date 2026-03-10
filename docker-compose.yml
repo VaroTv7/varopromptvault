@@ -6,25 +6,16 @@ services:
     container_name: promptvault
     restart: unless-stopped
     ports:
-      - "8090:3000"
+      - "8090:6100"
     volumes:
       - ./data:/app/data
-    environment:
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     deploy:
       resources:
         limits:
           cpus: '0.50'
-          memory: 512M
+          memory: 256M
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/categories" ]
+      test: [ "CMD", "node", "-e", "fetch('http://localhost:6100/api/categories').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))" ]
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - varonet
-
-networks:
-  varonet:
-    external: true

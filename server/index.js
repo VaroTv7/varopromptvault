@@ -168,7 +168,7 @@ app.get('/api/prompts/:id', async (request, reply) => {
         [request.params.id]
     );
     if (!prompt) {
-        reply.code(404).send({ error: 'Prompt not found' });
+        return reply.code(404).send({ error: 'Prompt not found' });
     }
     return prompt;
 });
